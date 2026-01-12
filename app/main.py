@@ -92,40 +92,71 @@ async def execute_multi_agent(request: TaskRequest):
 
 # ============ MEMORY ENDPOINTS ============
 
-@app.post("/api/memory/recall")
-async def recall_memory(request: MemoryQuery):
-    """
-    Recall relevant memories using semantic search
-    """
-    result = await orchestrator.recall_context(request.query)
-    return result
-
-
+# ÖNCE spesifik route'lar (history, stats, clear)
 @app.get("/api/memory/history")
 async def get_memory_history(limit: int = 50, offset: int = 0):
-    """
-    Get conversation history
-    """
-    memories = await orchestrator.memory.get_conversation_history(limit, offset)
-    return {"history": memories, "count": len(memories)}
-
-
-@app.delete("/api/memory/clear")
-async def clear_memory():
-    """
-    Clear all memory (use with caution!)
-    """
-    result = await orchestrator.clear_memory()
-    return result
+    """Get conversation history"""
+    exec_history = await orchestrator.get_execution_history(limit)
+    
+    history = []
+    for item in exec_history:
+        agent_response = item.get('response', {})
+        history.append({
+            'task': item.get('task', 'N/A'),
+            'agent_name': agent_response.get('agent_name', 'Unknown'),
+            'result': agent_response.get('result', ''),
+            'timestamp': 'Recent',
+            'metadata': agent_response.get('metadata', {})
+        })
+    
+    return {"history": history, "count": len(history)}
 
 
 @app.get("/api/memory/stats")
 async def get_memory_stats():
-    """
-    Get memory statistics
-    """
+    """Get memory statistics"""
     stats = await orchestrator.memory.get_memory_stats()
     return stats
+
+
+@app.delete("/api/memory/clear")
+async def clear_memory():
+    """Clear all memory (use with caution!)"""
+    result = await orchestrator.clear_memory()
+    return result
+
+
+@app.get("/api/memory/{query}")
+async def search_memory(query: str):
+    """Search memory using GET request"""
+    result = await orchestrator.recall_context(query)
+    raw_memories = result.get("relevant_memories", [])
+    
+    # Format like history endpoint
+    memories = []
+    for mem in raw_memories:
+        metadata = mem.get('metadata', {})
+        # Only include if relevance is high enough (optional)
+        memories.append({
+            'task': metadata.get('task', 'N/A').strip(),
+            'agent_name': metadata.get('agent_name', 'Unknown'),
+            'result': mem.get('content', ''),
+            'timestamp': metadata.get('timestamp', 'Unknown'),
+            'relevance_score': mem.get('relevance_score', 0)
+        })
+    
+    return {
+        "memories": memories,
+        "query": query,
+        "count": len(memories)
+    }
+
+
+@app.post("/api/memory/recall")
+async def recall_memory(request: MemoryQuery):
+    """Recall relevant memories using semantic search"""
+    result = await orchestrator.recall_context(request.query)
+    return result
 
 
 # ============ HISTORY ENDPOINTS ============

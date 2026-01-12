@@ -28,6 +28,9 @@ const ResponseDisplay = ({ response, isLoading }) => {
   const agentResponse = orchestration.agent_response || {};
   const metadata = agentResponse.metadata || {};
   const results = metadata.results || [];
+  
+  // Check if this is a coding response
+  const isCodingResponse = metadata.language === 'python' || agentResponse.agent_name === 'CodingAgent';
 
   return (
     <div className="response-container">
@@ -41,20 +44,40 @@ const ResponseDisplay = ({ response, isLoading }) => {
       </div>
 
       <div className="response-content">
-        {/* Main Result */}
-        <div className="response-section">
-          <h4>Result</h4>
-          <div className="response-text">
-            {agentResponse.result || response.message || 'No result available'}
-          </div>
-        </div>
-
         {/* Task Info */}
         {orchestration.task && (
           <div className="response-section">
             <h4>Task</h4>
             <div className="response-text">
               {orchestration.task}
+            </div>
+          </div>
+        )}
+
+        {/* Code Output (for coding agent) */}
+        {isCodingResponse && agentResponse.result && (
+          <div className="response-section">
+            <h4>
+              <Code size={18} />
+              Generated Code
+            </h4>
+            <pre className="code-block">
+              <code>{agentResponse.result}</code>
+            </pre>
+            {metadata.syntax_valid !== undefined && (
+              <div className={`validation-badge ${metadata.syntax_valid ? 'valid' : 'invalid'}`}>
+                {metadata.syntax_valid ? '✓ Syntax Valid' : '✗ Syntax Errors'}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Main Result (for non-coding responses) */}
+        {!isCodingResponse && (
+          <div className="response-section">
+            <h4>Result</h4>
+            <div className="response-text">
+              {agentResponse.result || response.message || 'No result available'}
             </div>
           </div>
         )}
@@ -78,19 +101,6 @@ const ResponseDisplay = ({ response, isLoading }) => {
                 </li>
               ))}
             </ul>
-          </div>
-        )}
-
-        {/* Code Output (if any) */}
-        {agentResponse.code && (
-          <div className="response-section">
-            <h4>
-              <Code size={18} />
-              Generated Code
-            </h4>
-            <pre className="code-block">
-              <code>{agentResponse.code}</code>
-            </pre>
           </div>
         )}
 
@@ -120,6 +130,9 @@ const ResponseDisplay = ({ response, isLoading }) => {
           <span>Status: {agentResponse.status || response.status}</span>
           {metadata.results_count && (
             <span>Results: {metadata.results_count}</span>
+          )}
+          {metadata.lines && (
+            <span>Lines: {metadata.lines}</span>
           )}
         </div>
       </div>

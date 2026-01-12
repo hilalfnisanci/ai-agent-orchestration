@@ -79,22 +79,38 @@ class MemoryManager:
             return {"status": "error", "message": str(e)}
     
     async def recall_memory(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
-        """Recall relevant memories using semantic search"""
+        """Recall relevant memories - simple keyword search"""
         try:
-            results = self.vectorstore.similarity_search(query, k=k)
+            # Get all documents
+            all_results = self.vectorstore.get()
             
+            if not all_results or not all_results.get('documents'):
+                return []
+            
+            documents = all_results.get('documents', [])
+            metadatas = all_results.get('metadatas', [])
+            
+            # Filter by keyword
+            query_lower = query.lower()
             memories = []
-            for result in results:
-                memories.append({
-                    "content": result.page_content,
-                    "metadata": result.metadata,
-                    "relevance": "high"
-                })
+            
+            for i, doc in enumerate(documents):
+                if query_lower in doc.lower():
+                    metadata = metadatas[i] if i < len(metadatas) else {}
+                    memories.append({
+                        "content": doc,
+                        "metadata": metadata,
+                        "relevance_score": 0.9,
+                        "relevance": "high"
+                    })
+                    
+                    if len(memories) >= k:
+                        break
             
             return memories
-        
         except Exception as e:
-            return [{"error": str(e)}]
+            print(f"Memory recall error: {str(e)}")
+            return []
     
     async def get_conversation_history(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get conversation history from SQLite"""
@@ -165,3 +181,28 @@ class MemoryManager:
         
         except Exception as e:
             return {"status": "error", "message": str(e)}
+        
+    async def get_all_memories(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get all memories from vector store"""
+        try:
+            # Get all documents from ChromaDB
+            results = self.vectorstore.get()
+            
+            if not results or not results.get('documents'):
+                return []
+            
+            memories = []
+            documents = results.get('documents', [])
+            metadatas = results.get('metadatas', [])
+            
+            for i, doc in enumerate(documents[:limit]):
+                metadata = metadatas[i] if i < len(metadatas) else {}
+                memories.append({
+                    'content': doc,
+                    'metadata': metadata
+                })
+            
+            return memories
+        except Exception as e:
+            print(f"Get all memories error: {str(e)}")
+            return []

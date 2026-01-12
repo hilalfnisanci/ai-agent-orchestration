@@ -129,15 +129,50 @@ class AgentOrchestrator:
     async def _detect_agent_type(self, task: str) -> str:
         """Auto-detect which agent to use based on task description"""
         task_lower = task.lower()
+        task_stripped = task.strip()
         
-        if any(word in task_lower for word in ["search", "find", "look", "research", "information"]):
+        # Priority 1: Explicit search keywords (highest priority for search)
+        search_keywords = ["search for", "find information", "look up", "research about", 
+                        "what is", "tell me about", "information about"]
+        if any(keyword in task_lower for keyword in search_keywords):
             return "search"
-        elif any(word in task_lower for word in ["code", "write", "generate", "script", "function"]):
-            return "coding"
-        elif any(word in task_lower for word in ["run", "execute", "test", "output"]):
+        
+        # Priority 2: Check if it's actual Python code (not just keywords in sentences)
+        # Must have Python syntax patterns AND be short (likely code snippet)
+        code_patterns = ["print(", "def ", "class ", "import ", "return ", "if __name__"]
+        has_code_pattern = any(pattern in task for pattern in code_patterns)
+        is_short = len(task_stripped.split()) < 30  # Less than 30 words
+        
+        if has_code_pattern and is_short:
             return "execution"
-        else:
-            return "search"  # Default to search
+        
+        # Priority 3: Execution requests (with verbs)
+        execution_keywords = ["run this", "execute this", "test this code", "run the code"]
+        if any(keyword in task_lower for keyword in execution_keywords):
+            return "execution"
+        
+        # Priority 4: Code generation requests
+        coding_keywords = ["write code", "write a function", "write a class", "generate code",
+                        "create a function", "implement a", "code to", "python function",
+                        "algorithm for", "write python"]
+        if any(keyword in task_lower for keyword in coding_keywords):
+            return "coding"
+        
+        # Priority 5: Question-based detection
+        if task_stripped.endswith("?"):
+            return "search"
+        
+        # Priority 6: Default based on structure
+        # Multi-line code without explanation → execution
+        if "\n" in task and has_code_pattern:
+            return "execution"
+        
+        # Single line with code syntax → execution
+        if "(" in task and ")" in task and any(p in task for p in ["print", "len", "range", "sum"]):
+            return "execution"
+        
+        # Default: if unsure, use search (safest option)
+        return "search"
     
     async def get_agent_status(self) -> Dict[str, Any]:
         """Get status of all agents"""
