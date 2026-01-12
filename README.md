@@ -272,6 +272,66 @@ Edit `app/config.py` to customize:
 
 ---
 
+## 🐳 Docker Setup (Optional)
+
+Docker is **optional** for running the backend in a container. Frontend runs separately.
+
+### Prerequisites
+- Docker Desktop installed
+- `.env` file with API keys in root directory
+
+### Files Already Included
+- `Dockerfile` - Backend container configuration
+- `docker-compose.yml` - Service orchestration
+- `.dockerignore` - Excludes unnecessary files
+
+### Quick Start with Docker
+```bash
+# 1. Make sure .env file exists with your API keys
+cat .env
+
+# 2. Build and start backend
+docker-compose up --build
+
+# 3. In another terminal, start frontend
+cd frontend
+npm run dev
+```
+
+### Access Points
+- Backend API: `http://localhost:8000`
+- API Documentation: `http://localhost:8000/docs`
+- Frontend: `http://localhost:5173`
+
+### Docker Commands
+```bash
+# Start backend (detached mode)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop backend
+docker-compose down
+
+# Rebuild after code changes
+docker-compose up --build
+
+# Clean everything (including volumes)
+docker-compose down -v
+```
+
+### Why Docker is Optional
+
+This project works perfectly without Docker. Docker is provided for:
+- Consistent development environments
+- Easy backend deployment
+- Isolation from local Python environment
+
+**For simplest setup**: Just use `uvicorn app.main:app --reload` as shown in Quick Start.
+
+---
+
 ## 🧪 Testing
 
 ### Manual Testing
