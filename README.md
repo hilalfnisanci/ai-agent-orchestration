@@ -399,7 +399,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 **Hilal Nişancı**
 
 - GitHub: [@hilalfnisanci](https://github.com/hilalfnisanci)
-- LinkedIn: [Hilal Nişancı](https://www.linkedin.com/in/hilalfnisanci/)
+- LinkedIn: [Hilal Nişancı](https://www.linkedin.com/in/hilal-nisanci/)
 
 ---
 
