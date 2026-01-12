@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SERPAPI_API_KEY: ${SERPAPI_API_KEY}
+      ENVIRONMENT: development
+      DEBUG: "True"
+    volumes:
+      - ./data:/app/data
+      - ./app:/app/app
+      - ./frontend:/app/frontend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - ai-network
+
+networks:
+  ai-network:
+    driver: bridge
