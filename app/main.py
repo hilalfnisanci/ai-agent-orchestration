@@ -28,7 +28,7 @@ orchestrator = AgentOrchestrator()
 
 class TaskRequest(BaseModel):
     """Task execution request"""
-    task: str
+    description: str 
     agent_type: Optional[str] = None
 
 
@@ -75,7 +75,7 @@ async def execute_task(request: TaskRequest):
         agent_type: Optional agent type (search/coding/execution)
     """
     result = await orchestrator.execute_task(
-        task=request.task,
+        task=request.description,  # description kullan
         agent_type=request.agent_type
     )
     return result
@@ -178,7 +178,10 @@ async def websocket_endpoint(websocket: WebSocket):
         except:
             pass
     finally:
-        await websocket.close()
+        try:
+            await websocket.close()
+        except:
+            pass  # Already closed
 
 
 if __name__ == "__main__":

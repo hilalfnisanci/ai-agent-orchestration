@@ -3,8 +3,8 @@ import json
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 import chromadb
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
 from app.config import CHROMA_PERSIST_DIR, DATABASE_URL
 
 
